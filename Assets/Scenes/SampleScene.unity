@@ -234,7 +234,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   API_URL: http://127.0.0.1:5000
-  session_continue_time: -1
+  GAME_ID: 959742
+  session_continue_time: 5
+  poll_server_when_playing: 1
   DEBUG: 1
 --- !u!4 &901585175
 Transform:

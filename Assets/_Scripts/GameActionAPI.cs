@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Text;
 
 public class GameActionAPI : MonoBehaviour
 {
     public static GameActionAPI instance;
     public string API_URL = "http://127.0.0.1:5000";
-    public float session_continue_time = -1f;
+    public int GAME_ID = 959742;
+    public float session_continue_time = 15f;
+    public bool poll_server_when_playing = false;
     public bool DEBUG = false;
 
     User thisUser;
@@ -23,9 +26,12 @@ public class GameActionAPI : MonoBehaviour
     }
 
     private void Start() {
+        Debug.Log("Starting");
         if (DEBUG) {
+            Debug.Log("DELETING PLAYER PREFS");
             PlayerPrefs.DeleteAll();
         }
+        Debug.Log("Starting session");
         StartCoroutine(StartSession());
     }
 
@@ -43,7 +49,7 @@ public class GameActionAPI : MonoBehaviour
     }
 
     private IEnumerator GetUser() {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(API_URL + "/user")) {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(API_URL + "/user/" + GAME_ID)) {
             // Request and wait for the desired page.
             yield return webRequest.SendWebRequest();
 
@@ -76,7 +82,7 @@ public class GameActionAPI : MonoBehaviour
     }
 
     private IEnumerator GetSession() {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(API_URL + "/session")) {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(API_URL + "/session/" + GAME_ID)) {
             // Request and wait for the desired page.
             yield return webRequest.SendWebRequest();
 
@@ -92,10 +98,23 @@ public class GameActionAPI : MonoBehaviour
 
     private IEnumerator AssociateSession() {
         // POST /session/user
+        using (UnityWebRequest www = new UnityWebRequest(API_URL + "/session/user", "POST")) {
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new UserSession(thisUser, thisSession)));
+            www.uploadHandler = (UploadHandler)new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+            yield return www.SendWebRequest();
 
-        // TODO
+            if (www.isHttpError) {
+                Debug.LogError("Error from server: " + www.responseCode);
+            } else {
+                Debug.Log("Session associated: " + www.responseCode);
+            }
+        }
 
-        yield return null;
+        if (poll_server_when_playing) {
+            StartCoroutine(PostSessionContinue());
+        }
     }
 
     
@@ -114,19 +133,49 @@ public class GameActionAPI : MonoBehaviour
         yield return GetSession();
 
         yield return AssociateSession();
-
-        yield return null;
     }
 
     private IEnumerator PostSessionContinue() {
-        yield return null;
+        while (true) {
+            yield return new WaitForSeconds(session_continue_time);
+
+            using (UnityWebRequest www = new UnityWebRequest(API_URL + "/session/continue", "POST")) {
+                byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new UserSession(thisUser, thisSession)));
+                www.uploadHandler = (UploadHandler)new UploadHandlerRaw(bodyRaw);
+                www.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+                www.SetRequestHeader("Content-Type", "application/json");
+                yield return www.SendWebRequest();
+
+                if (www.isHttpError) {
+                    Debug.LogError("Error from server: " + www.responseCode);
+                } else {
+                    Debug.Log("Session associated: " + www.responseCode);
+                }
+            }
+        }
+    }
+
+    private void OnApplicationQuit() {
+        StartCoroutine(PostSessionEnd());
     }
 
     private IEnumerator PostSessionEnd() {
-        yield return null;
+        using (UnityWebRequest www = new UnityWebRequest(API_URL + "/session/end", "POST")) {
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new UserSession(thisUser, thisSession)));
+            www.uploadHandler = (UploadHandler)new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+            yield return www.SendWebRequest();
+
+            if (www.isHttpError) {
+                Debug.LogError("Error from server: " + www.responseCode);
+            } else {
+                Debug.Log("Session associated: " + www.responseCode);
+            }
+        }
     }
 
-    private IEnumerator PostAction() {
+    private IEnumerator PostAction(string action_name, string action_data) {
         yield return null;
     }
 
