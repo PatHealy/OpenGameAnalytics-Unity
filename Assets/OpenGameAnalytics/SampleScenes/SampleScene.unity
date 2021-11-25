@@ -269,7 +269,7 @@ PrefabInstance:
     - target: {fileID: 7327377369727687982, guid: 77f7e08ebd45748478fa7f14fb255c29,
         type: 3}
       propertyPath: m_Name
-      value: GameActionAPI
+      value: OpenGameAnalytics
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 77f7e08ebd45748478fa7f14fb255c29, type: 3}

@@ -5,11 +5,11 @@ using UnityEngine.Networking;
 using System.Text;
 using System;
 
-public class GameActionAPI : MonoBehaviour
+public class OpenGameAnalytics : MonoBehaviour
 {
     bool DEBUG = false;
 
-    public static GameActionAPI instance;
+    public static OpenGameAnalytics instance;
     public string API_URL = "http://127.0.0.1:5000";
     public int GAME_ID = 959742;
     public float session_continue_time = 15f;
@@ -45,19 +45,19 @@ public class GameActionAPI : MonoBehaviour
 
     private void TestSaveData() {
         // Saves this user's age as 32
-        GameActionAPI.instance.SaveUserInfo("age", "32");
+        OpenGameAnalytics.instance.SaveUserInfo("age", "32");
 
         // Saves that this user's study ID is 00012
-        GameActionAPI.instance.SaveUserInfo("study_id", "00012");
+        OpenGameAnalytics.instance.SaveUserInfo("study_id", "00012");
 
         // Saves that the user choose option #4 during choice #2
-        GameActionAPI.instance.SaveUserAction("choice2", "4");
+        OpenGameAnalytics.instance.SaveUserAction("choice2", "4");
 
         // Saves that the user was randomly assigned to the 1st person condition
-        GameActionAPI.instance.AssignCondition("perspective", "1st-person");
+        OpenGameAnalytics.instance.AssignCondition("perspective", "1st-person");
 
         // Saves that the user chose answer 'A' for the first question of some quiz
-        GameActionAPI.instance.SaveStudyEndpoint("QuizQuestion1", "A");
+        OpenGameAnalytics.instance.SaveStudyEndpoint("QuizQuestion1", "A");
         // ^^^ Would only use this if there's something in the game itself to measure an endpoint
         // i.e. something we may expect to be changed by the game
     }
