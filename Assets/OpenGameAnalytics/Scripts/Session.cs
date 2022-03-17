@@ -1,11 +1,17 @@
 ﻿using System;
-
-[Serializable]
-public class Session
+namespace OGA
 {
-    public int play_session_id;
+    [Serializable]
+    public class Session
+    {
+        public int play_session_id;
 
-    public override string ToString() {
-        return "SESSION: " + play_session_id;
+        public Session(int id) {
+            play_session_id = id;
+        }
+
+        public override string ToString() {
+            return "SESSION: " + play_session_id;
+        }
     }
 }

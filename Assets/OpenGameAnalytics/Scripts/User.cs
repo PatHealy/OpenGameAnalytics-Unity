@@ -1,17 +1,20 @@
 ﻿using System;
 
-[Serializable]
-public class User
+namespace OGA
 {
-    public string username;
-    public string token;
+    [Serializable]
+    public class User
+    {
+        public string username;
+        public string token;
 
-    public User(string us, string to) {
-        username = us;
-        token = to;
-    }
+        public User(string us, string to) {
+            username = us;
+            token = to;
+        }
 
-    public override string ToString() {
-        return username + ": " + token;
+        public override string ToString() {
+            return username + ": " + token;
+        }
     }
 }
