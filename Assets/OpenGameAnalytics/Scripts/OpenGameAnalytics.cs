@@ -9,7 +9,8 @@ namespace OGA
 {
     public class OpenGameAnalytics : MonoBehaviour
     {
-        bool DEBUG = false;
+        public bool DEBUG_MODE = false;
+        public bool LOG_ACTIONS = false;
 
         public static OpenGameAnalytics instance;
         public string API_URL = "http://127.0.0.1:5000";
@@ -36,14 +37,15 @@ namespace OGA
 
                 saver = new DataSaver();
 
-                if (DEBUG) {
-                    Debug.Log("Deleting old queue");
+                if (DEBUG_MODE) {
+                    Debug.Log("DEBUG MODE ENABLED. Debug mode will delete player/session data at runtime and should never be enabled in production.");
+                    if (LOG_ACTIONS) { Debug.Log("Deleting old queue"); }
                     saver.DeleteData("dataQueue");
                 }
 
                 object loadedData = saver.LoadData("dataQueue");
                 if (loadedData != null) {
-                    Debug.Log("Attempting queue load");
+                    if (LOG_ACTIONS) { Debug.Log("Attempting queue load"); }
                     try {
                         dataQueue = (Queue<ServerAction>)loadedData;
                     } catch (Exception e) {
@@ -56,8 +58,8 @@ namespace OGA
         }
 
         private void Start() {
-            if (DEBUG) {
-                Debug.Log("DELETING PLAYER PREFS");
+            if (DEBUG_MODE) {
+                if (LOG_ACTIONS) { Debug.Log("DELETING PLAYER PREFS"); }
                 PlayerPrefs.DeleteAll();
             }
 
@@ -137,7 +139,7 @@ namespace OGA
             thisUser = new User(PlayerPrefs.GetString("username"), PlayerPrefs.GetString("token"));
 
             if (PlayerPrefs.HasKey("session")) {
-                Debug.Log("Loading old session");
+                if (LOG_ACTIONS) { Debug.Log("Loading old session"); }
                 thisSession = new Session(PlayerPrefs.GetInt("session"));
             }
             
@@ -152,7 +154,7 @@ namespace OGA
         private void SendDataPoints() {
             saver.SaveData(dataQueue, "dataQueue");
             if (isSending || dataQueue.Count < 1) {
-                Debug.Log("Not sending! " + dataQueue.Count + " in the queue.");
+                if (LOG_ACTIONS) { Debug.Log("Not sending! " + dataQueue.Count + " in the queue."); }
                 return;
             } else {
                 isSending = true;
@@ -214,26 +216,25 @@ namespace OGA
             switch (sa.action) {
                 case ServerAction.ActionType.CreateUser:
                     thisUser = JsonUtility.FromJson<User>(response);
-                    Debug.Log(thisUser);
+                    if (LOG_ACTIONS) { Debug.Log(thisUser); }
                     SaveUser();
                     break;
                 case ServerAction.ActionType.StartSession:
                     thisSession = JsonUtility.FromJson<Session>(response);
                     PlayerPrefs.SetInt("session", thisSession.play_session_id);
-                    Debug.Log(thisSession);
+                    if (LOG_ACTIONS) { Debug.Log(thisSession); }
                     break;
                 case ServerAction.ActionType.ContinueSession:
-                    Debug.Log("Session continued");
+                    if (LOG_ACTIONS) { Debug.Log("Session continued"); }
                     break;
                 case ServerAction.ActionType.EndSession:
-                    Debug.Log("Session ended");
+                    if (LOG_ACTIONS) { Debug.Log("Session ended"); }
                     break;
                 case ServerAction.ActionType.PostData:
-                    Debug.Log("Data posted");
+                    if (LOG_ACTIONS) { Debug.Log("Data posted"); }
                     break;
             }
         }
-
 
         private IEnumerator PostData() {
             while (dataQueue.Count > 0) {
@@ -248,7 +249,7 @@ namespace OGA
                     shouldDequeue = false;
                 }
 
-                Debug.Log("Attempting to send: " + currentPoint.ToString());
+                if (LOG_ACTIONS) { Debug.Log("Attempting to send: " + currentPoint.ToString()); }
 
                 string postURL = API_URL + GetURL(currentPoint);
                 string method = GetMethod(currentPoint);
@@ -263,11 +264,11 @@ namespace OGA
                     yield return www.SendWebRequest();
 
                     if (www.isNetworkError || www.isHttpError) {
-                        Debug.LogError("Error from server: " + www.responseCode);
+                        if (LOG_ACTIONS) { Debug.LogError("Error from server: " + www.responseCode); }
                         isSending = false;
                         yield break;
                     } else {
-                        Debug.Log("Success with action (" + postURL + ": " + www.responseCode);
+                        if (LOG_ACTIONS) { Debug.Log("Success with action (" + postURL + ": " + www.responseCode); }
                         HandleResponse(currentPoint, www.downloadHandler.text);
                         if (shouldDequeue) {
                             dataQueue.Dequeue();
